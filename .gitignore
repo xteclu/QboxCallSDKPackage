@@ -1,6 +1,8 @@
 .DS_Store
 /.build
 /Packages
+/Sources/QboxCallSDK/.git
+/Sources/QboxCallSDK/.gitignore
 xcuserdata/
 DerivedData/
 .swiftpm/configuration/registries.json
