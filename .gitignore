@@ -2,6 +2,7 @@
 /.build
 /Packages
 /Sources/QboxCallSDK/.git
+/Sources/QboxCallSDK/.git_hidden
 /Sources/QboxCallSDK/.gitignore
 xcuserdata/
 DerivedData/
