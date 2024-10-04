@@ -33,7 +33,7 @@ public class CallSettings {
 public class CallController {
   let moduleName = "CallController"
   
-  weak var delegate: CallControllerDelegate?
+  public weak var delegate: CallControllerDelegate?
   private let iceServers = [RTCIceServer(urlStrings: ["stun:stun.l.google.com:19302"])]
   private var socket: SocketProvider?
   private var rtc: RTCClient?
