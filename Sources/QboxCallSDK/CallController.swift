@@ -110,7 +110,7 @@ public class CallController {
       return
     }
     
-    let url = url.replacingOccurrences(of: "https", with: "ws") + "/websocket?token=" + token
+    let url = url.replacingOccurrences(of: "https", with: "wss") + "/websocket?token=" + token
     
     if #available(iOS 13.0, *) {
       QBoxLog.debug(moduleName, "setSocket() -> using NativeSocket")
