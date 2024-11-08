@@ -204,8 +204,7 @@ extension CallController: SocketProviderDelegate {
       
     case "hangup":
       QBoxLog.debug(moduleName, "socketDidRecieve() -> Hangup")
-      //      rtc.close()
-      socket?.disconnect()
+      dispose()
       
     default:
       break
