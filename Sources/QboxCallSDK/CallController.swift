@@ -41,6 +41,11 @@ public class CallController {
   private var url: String
   private var isIdle: Bool = true
   private var settings: CallSettings
+  public var socketState: SocketState {
+    get {
+      return socket?.state ?? SocketState.None
+    }
+  }
   
   public required init(url socketUrl: String) {
     url = socketUrl
