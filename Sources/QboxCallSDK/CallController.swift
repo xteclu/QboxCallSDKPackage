@@ -239,8 +239,6 @@ extension CallController: RTCClientDelegate {
     case RTCPeerConnectionState.connected:
       setAudioInput(isEnabled: settings.isMicrophoneEnabled)
       setSpeaker(isEnabled: settings.isSpeakerEnabled)
-    case RTCPeerConnectionState.disconnected:
-      socket?.disconnect()
     case RTCPeerConnectionState.closed:
       break
     default:
