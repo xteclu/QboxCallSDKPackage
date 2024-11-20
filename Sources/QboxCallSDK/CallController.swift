@@ -88,21 +88,8 @@ public class CallController {
     socket?.disconnect()
   }
   
-  public func disconnectSocket() {
-    socket?.disconnect()
-  }
-  
   public func disconnect() {
     dispose()
-  }
-  
-  private func getSocket() -> SocketProvider? {
-    if socket?.state != SocketState.Connected {
-      socket?.disconnect()
-      setSocket()
-      socket?.connect()
-    }
-    return socket
   }
   
   public func endCall() {
@@ -110,7 +97,7 @@ public class CallController {
       return
     }
 
-    getSocket()?.send(["event": "hangup"]) {
+    socket?.send(["event": "hangup"]) {
       [weak self] in
       self?.dispose()
     }
@@ -160,7 +147,7 @@ extension CallController{
   
   public func sendDTMF(digit: String) {
     QBoxLog.debug(moduleName, "socket.send() -> event: dtmf, digit: \(digit)")
-    getSocket()?.send([
+    socket?.send([
       "event": "dtmf",
       "dtmf": ["digit": digit]
     ]) {}
@@ -175,7 +162,7 @@ extension CallController: SocketProviderDelegate {
         [weak self] sessionDescription in
         guard let self else { return }
         QBoxLog.debug("CallController", "socket.send() -> event: call (with sessionDescription)")
-        getSocket()?.send([
+        socket?.send([
           "event": "call",
           "call": ["sdp": [
             "sdp": sessionDescription.sdp,
