@@ -81,9 +81,13 @@ public class CallController {
   }
   
   public func endCall() {
+    QBoxLog.debug(moduleName, "socket.send() -> event: hangup")
     socket?.send(["event": "hangup"]) {
       [weak self] in
-      self?.dispose()
+      guard let self else { return }
+
+      QBoxLog.debug(self.moduleName, "dispose()")
+      self.dispose()
     }
   }
   
