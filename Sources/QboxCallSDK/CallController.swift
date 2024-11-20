@@ -39,7 +39,6 @@ public class CallController {
   private var rtc: RTCClient?
   private var token: String?
   private var url: String
-  private var isIdle: Bool = true
   private var settings: CallSettings
   public var socketState: SocketState {
     get {
@@ -53,25 +52,16 @@ public class CallController {
   }
   
   public func startCall(token socketToken: String? = nil, with initialSettings: CallSettings? = nil) -> Bool {
-    if isIdle {
-      isIdle = false
-    } else {
-      QBoxLog.error("CallController", "startCall() -> already started")
-      return false
-    }
-    
     if socketToken != nil { token = socketToken }
     settings = initialSettings ?? settings
 
     setSocket()
     guard let socket = socket else {
-      isIdle = true
       return false
     }
     
     setRTC()
     guard let _ = rtc?.connection else {
-      isIdle = true
       return false
     }
     
@@ -81,8 +71,6 @@ public class CallController {
   }
   
   private func dispose() {
-    if !isIdle { isIdle = true }
-
     rtc?.close()
     
     socket?.disconnect()
@@ -93,10 +81,6 @@ public class CallController {
   }
   
   public func endCall() {
-    guard !isIdle else {
-      return
-    }
-
     socket?.send(["event": "hangup"]) {
       [weak self] in
       self?.dispose()
@@ -173,7 +157,6 @@ extension CallController: SocketProviderDelegate {
       
     case .Disconnected:
       socket = nil
-      isIdle = true
     case .None:
       break
     }
