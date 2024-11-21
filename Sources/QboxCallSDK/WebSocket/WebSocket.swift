@@ -73,10 +73,11 @@ class NativeSocket: NSObject, SocketProvider {
         delegate?.socketDidRecieve(data: json)
         
       case .success:
-        QBoxLog.debug(moduleName, "listen() -> Data recieved, string expected")
+        QBoxLog.debug(moduleName, "DidReceiveMessage() -> Data recieved, string expected")
         
       case .failure:
-        self.disconnect()
+        QBoxLog.error(moduleName, "DidReceiveMessage() -> socket failure")
+        state = SocketState.Disconnected
         return
       }
       
@@ -86,7 +87,6 @@ class NativeSocket: NSObject, SocketProvider {
   
   func disconnect() {
     socket?.cancel()
-    state = SocketState.Disconnected
   }
 }
 
@@ -97,7 +97,15 @@ extension NativeSocket: URLSessionWebSocketDelegate, URLSessionDelegate  {
   }
   
   func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
-    disconnect()
+    QBoxLog.error(moduleName, "urlSession() -> didCloseWith: [\(closeCode.rawValue)] \(String(describing: reason))")
+    state = SocketState.Disconnected
   }
   
+  func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+      if let error = error {
+        if let error = error as NSError? {
+          print("urlSession() -> didCompleteWithError \(error.code)")
+        }
+      }
+  }
 }
