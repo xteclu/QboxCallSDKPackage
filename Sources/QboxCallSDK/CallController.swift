@@ -40,6 +40,7 @@ public class CallController {
   private var token: String?
   private var url: String
   private var settings: CallSettings
+  private var isUsed: Bool = false
   public var socketState: SocketState {
     get {
       return socket?.state ?? SocketState.None
@@ -71,6 +72,8 @@ public class CallController {
   }
   
   private func dispose() {
+    isUsed = false
+
     rtc?.close()
     
     socket?.disconnect()
@@ -146,6 +149,12 @@ extension CallController: SocketProviderDelegate {
   func socketDidChange(state: SocketState) {
     switch state {
     case .Connected:
+      if isUsed {
+        break
+      }
+      
+      isUsed = true
+
       rtc?.offer {
         [weak self] sessionDescription in
         guard let self else { return }
