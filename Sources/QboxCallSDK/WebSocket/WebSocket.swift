@@ -61,7 +61,7 @@ class NativeSocket: NSObject, SocketProvider {
   }
   
   func send(_ data: [String: Any], completion: @escaping () -> Void) {
-//    checkConnection()
+    checkConnection()
 
     guard let json = try? JSONSerialization.data(withJSONObject: data) else {
       QBoxLog.error(moduleName, "send() -> JSON exception, data: \(data)")
