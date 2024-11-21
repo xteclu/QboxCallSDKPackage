@@ -10,6 +10,7 @@ import Foundation
 @available(iOS 13.0, *)
 class NativeSocket: NSObject, SocketProvider {
   private let moduleName = "NativeSocket"
+  private let networkErrors = [57 , 60 , 54]
   
   weak var delegate: SocketProviderDelegate?
   private var socketUrl: URL?
@@ -94,7 +95,7 @@ class NativeSocket: NSObject, SocketProvider {
         
       case .failure:
         QBoxLog.error(moduleName, "DidReceiveMessage() -> socket failure")
-        state = SocketState.Disconnected
+        state = .Disconnected
         return
       }
       
@@ -111,18 +112,29 @@ class NativeSocket: NSObject, SocketProvider {
 @available(iOS 13.0, *)
 extension NativeSocket: URLSessionWebSocketDelegate, URLSessionDelegate  {
   func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
-    state = SocketState.Connected
+    state = .Connected
   }
   
   func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
     QBoxLog.error(moduleName, "urlSession() -> didCloseWith: [\(closeCode.rawValue)] \(String(describing: reason))")
-    state = SocketState.Disconnected
+    state = .Disconnected
   }
   
   func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
       if let error = error {
         if let error = error as NSError? {
-          print("urlSession() -> didCompleteWithError \(error.code)")
+          if networkErrors.contains(error.code) {
+            QBoxLog.error(moduleName, "urlSession() -> network error")
+          }
+          else if error.code == -999 {
+            QBoxLog.error(moduleName, "urlSession() -> task canceled")
+          }
+          else if error.code == -1009 {
+            QBoxLog.error(moduleName, "urlSession() -> socket is already closed")
+          }
+          else {
+            QBoxLog.error(moduleName, "urlSession() -> didCompleteWithError code: \(error.code)")
+          }
         }
       }
   }
