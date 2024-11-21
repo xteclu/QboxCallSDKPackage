@@ -12,6 +12,7 @@ class NativeSocket: NSObject, SocketProvider {
   private let moduleName = "NativeSocket"
   
   weak var delegate: SocketProviderDelegate?
+  private var socketUrl: URL?
   private var socket: URLSessionWebSocketTask?
   var state = SocketState.None {
     didSet {
@@ -33,6 +34,12 @@ class NativeSocket: NSObject, SocketProvider {
       QBoxLog.error(moduleName, "init() -> incorrect url: \(urlString)")
       return
     }
+    socketUrl = url
+    startTask()
+  }
+  
+  func startTask() {
+    guard let url = socketUrl else { return }
     socket = urlSession.webSocketTask(with: url)
   }
   
@@ -44,8 +51,18 @@ class NativeSocket: NSObject, SocketProvider {
     socket?.resume()
     listen()
   }
+
+  func checkConnection() {
+    if state != .Connected {
+      socket?.cancel()
+      startTask()
+      connect()
+    }
+  }
   
   func send(_ data: [String: Any], completion: @escaping () -> Void) {
+//    checkConnection()
+
     guard let json = try? JSONSerialization.data(withJSONObject: data) else {
       QBoxLog.error(moduleName, "send() -> JSON exception, data: \(data)")
       return
@@ -87,6 +104,7 @@ class NativeSocket: NSObject, SocketProvider {
   
   func disconnect() {
     socket?.cancel()
+    state = .Disconnected
   }
 }
 

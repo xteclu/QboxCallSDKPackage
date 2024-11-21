@@ -160,7 +160,8 @@ extension CallController: SocketProviderDelegate {
       }
       
     case .Disconnected:
-      socket = nil
+      break
+//      socket = nil
     case .None:
       break
     }
