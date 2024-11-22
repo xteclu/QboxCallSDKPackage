@@ -50,12 +50,20 @@ class AudioSession: NSObject {
     RTCDispatcher.dispatchAsync(on: .typeAudioSession) {
       let session = RTCAudioSession.sharedInstance()
       
-      let portOverride = isForced ? AVAudioSession.PortOverride.speaker : AVAudioSession.PortOverride.none
+      var options: AVAudioSession.CategoryOptions = [.allowBluetooth]
+      let portOverride: AVAudioSession.PortOverride
+      if isForced {
+        options.insert(.defaultToSpeaker)
+        portOverride = AVAudioSession.PortOverride.speaker
+      } else {
+        portOverride = AVAudioSession.PortOverride.none
+      }
+
       
       session.lockForConfiguration()
       
       do {
-        try session.setCategory(AVAudioSession.Category.playAndRecord)
+        try session.setCategory(AVAudioSession.Category.playAndRecord, with: options)
         try session.overrideOutputAudioPort(portOverride)
       } catch {
         QBoxLog.error("RTCAudioSession", "setSpeaker(\(isForced)) - > error: \(error)")
