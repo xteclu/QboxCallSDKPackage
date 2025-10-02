@@ -20,13 +20,16 @@ extension CallControllerDelegate {
 public class CallSettings {
   var isSpeakerEnabled: Bool
   var isMicrophoneEnabled: Bool
+  var isAuthZone: Bool
   
   public init(
     isSpeakerEnabled SpeakerParam: Bool = false,
-    isMicrophoneEnabled MicrophoneParam: Bool = false
+    isMicrophoneEnabled MicrophoneParam: Bool = false,
+    isAuthZone AuthZoneParam: Bool = false
   ) {
     isSpeakerEnabled = SpeakerParam
     isMicrophoneEnabled = MicrophoneParam
+    isAuthZone = AuthZoneParam
   }
 }
 
@@ -47,10 +50,11 @@ public class CallController {
     }
   }
   
-  public required init(url socketUrl: String) {
-    url = socketUrl
-    settings = CallSettings(isSpeakerEnabled: false, isMicrophoneEnabled: false)
-  }
+    public required init(url socketUrl: String, settings initialSettings: CallSettings = CallSettings()) {
+        url = socketUrl
+        settings = initialSettings
+    }
+
   
   public func startCall(token socketToken: String? = nil, with initialSettings: CallSettings? = nil) -> Bool {
     if socketToken != nil { token = socketToken }
@@ -159,13 +163,17 @@ extension CallController: SocketProviderDelegate {
         [weak self] sessionDescription in
         guard let self else { return }
         QBoxLog.debug("CallController", "socket.send() -> event: call (with sessionDescription)")
-        socket?.send([
-          "event": "call",
-          "call": ["sdp": [
-            "sdp": sessionDescription.sdp,
-            "type": stringifySDPType(sessionDescription.type)
-          ]]
-        ]) {}
+          socket?.send([
+            "event": "call",
+            "call": [
+              "sdp": [
+                "sdp": sessionDescription.sdp,
+                "type": stringifySDPType(sessionDescription.type)
+              ],
+              "auth_zone": settings.isAuthZone
+            ]
+          ]) {}
+
       }
       
     case .Disconnected:
