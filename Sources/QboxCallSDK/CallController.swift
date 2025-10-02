@@ -50,9 +50,9 @@ public class CallController {
     }
   }
   
-    public required init(url socketUrl: String, settings initialSettings: CallSettings = CallSettings()) {
+    public required init(url socketUrl: String) {
         url = socketUrl
-        settings = initialSettings
+        settings = CallSettings(isSpeakerEnabled: false, isMicrophoneEnabled: false)
     }
 
   
