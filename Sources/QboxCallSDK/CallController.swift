@@ -43,7 +43,6 @@ public class CallController {
   private var token: String?
   private var url: String
   private var settings: CallSettings
-  private var isUsed: Bool = false
   public var socketState: SocketState {
     get {
       return socket?.state ?? SocketState.None
@@ -56,28 +55,45 @@ public class CallController {
   }
   
   
-  public func startCall(token socketToken: String? = nil, with initialSettings: CallSettings? = nil) -> Bool {
+  public func connect(token socketToken: String? = nil, with initialSettings: CallSettings? = nil) -> Bool {
     if socketToken != nil { token = socketToken }
     settings = initialSettings ?? settings
-    
+
     setSocket()
-    guard let socket = socket else {
+    guard socket != nil else { return false }
+
+    socket?.connect()
+    return true
+  }
+
+  public func startCall() -> Bool {
+    guard socket != nil else {
+      QBoxLog.error(moduleName, "startCall() -> socket is nil, call connect() first")
       return false
     }
-    
+
     setRTC()
-    guard let _ = rtc?.connection else {
-      return false
+    guard let _ = rtc?.connection else { return false }
+
+    rtc?.offer { [weak self] sessionDescription in
+      guard let self else { return }
+      QBoxLog.debug(moduleName, "socket.send() -> event: call (with sessionDescription)")
+      socket?.send([
+        "event": "call",
+        "call": [
+          "sdp": [
+            "sdp": sessionDescription.sdp,
+            "type": stringifySDPType(sessionDescription.type)
+          ],
+          "auth_zone": settings.isAuthZone
+        ]
+      ]) {}
     }
-    
-    socket.connect()
-    
+
     return true
   }
   
   private func dispose() {
-    isUsed = false
-    
     rtc?.close()
     
     socket?.disconnect()
@@ -106,7 +122,7 @@ public class CallController {
   
   private func setSocket() {
     guard let token = token else {
-      QBoxLog.error(moduleName, "startCall() -> token is nil")
+      QBoxLog.error(moduleName, "connect() -> token is nil")
       return
     }
     
@@ -153,29 +169,8 @@ extension CallController: SocketProviderDelegate {
   func socketDidChange(state: SocketState) {
     switch state {
     case .Connected:
-      if isUsed {
-        break
-      }
-      
-      isUsed = true
-      
-      rtc?.offer {
-        [weak self] sessionDescription in
-        guard let self else { return }
-        QBoxLog.debug("CallController", "socket.send() -> event: call (with sessionDescription)")
-        socket?.send([
-          "event": "call",
-          "call": [
-            "sdp": [
-              "sdp": sessionDescription.sdp,
-              "type": stringifySDPType(sessionDescription.type)
-            ],
-            "auth_zone": settings.isAuthZone
-          ]
-        ]) {}
-        
-      }
-      
+      break
+
     case .Disconnected:
       break
       //      socket = nil
