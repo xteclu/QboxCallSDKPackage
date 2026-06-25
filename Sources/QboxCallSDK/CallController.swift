@@ -67,11 +67,15 @@ public class CallController {
   }
 
   public func startCall() -> Bool {
-    guard socket != nil else {
-      QBoxLog.error(moduleName, "startCall() -> socket is nil, call connect() first")
+    guard socketState == .Connected else {
+      QBoxLog.error(moduleName, "startCall() -> socket is not connected")
       return false
     }
 
+    return sendOffer()
+  }
+
+  private func sendOffer() -> Bool {
     setRTC()
     guard let _ = rtc?.connection else { return false }
 
