@@ -43,6 +43,7 @@ public class CallController {
   private var token: String?
   private var url: String
   private var settings: CallSettings
+  private var pendingCall: Bool = false
   public var socketState: SocketState {
     get {
       return socket?.state ?? SocketState.None
@@ -66,12 +67,17 @@ public class CallController {
     return true
   }
 
-  public func startCall() -> Bool {
+  public func startCall(token socketToken: String? = nil, with initialSettings: CallSettings? = nil) -> Bool {
+    guard connect(token: socketToken, with: initialSettings) else { return false }
+    pendingCall = true
+    return true
+  }
+
+  public func call() -> Bool {
     guard socketState == .Connected else {
-      QBoxLog.error(moduleName, "startCall() -> socket is not connected")
+      QBoxLog.error(moduleName, "call() -> socket is not connected")
       return false
     }
-
     return sendOffer()
   }
 
@@ -98,6 +104,7 @@ public class CallController {
   }
   
   private func dispose() {
+    pendingCall = false
     rtc?.close()
     
     socket?.disconnect()
@@ -173,7 +180,10 @@ extension CallController: SocketProviderDelegate {
   func socketDidChange(state: SocketState) {
     switch state {
     case .Connected:
-      break
+      if pendingCall {
+        pendingCall = false
+        _ = sendOffer()
+      }
 
     case .Disconnected:
       break
